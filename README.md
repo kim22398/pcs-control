@@ -10,18 +10,45 @@ A professional Python toolkit for Power Conversion System (PCS) control, simulat
 
 ---
 
+## Run it (main.py)
+
+A single CLI entry point at the repo root drives the whole toolkit — no `PYTHONPATH` or install step required:
+
+```bash
+python main.py                 # run the flagship 1 MW / 2 MWh BESS PCS droop demo
+python main.py --help          # list all sub-commands
+python main.py test            # run the pytest suite
+
+# Domain sub-commands (all have sensible defaults):
+python main.py droop --freq 59.7 --p-setpoint-kw 400 --droop-pct 5
+python main.py converter --power-kw 500 --ac-voltage 690 --dc-voltage 1150
+python main.py simulate        # parametrised P-f / Q-V droop sweep (text table)
+```
+
+For example, `python main.py converter` prints the steady-state operating point and confirms the DC bus gives linear modulation (`m_a ≤ 1.0`):
+
+```
+  Efficiency  η         :      98.42 %
+  DC current  I_dc      :      441.7 A
+  AC current  I_ac      :      418.4 A
+  Modulation index m_a  :     0.9798  [linear]
+```
+
+---
+
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Theory & Background](#theory--background)
-3. [Architecture](#architecture)
-4. [Project Structure](#project-structure)
-5. [Quick Start](#quick-start)
-6. [API Reference](#api-reference)
-7. [Use Cases](#use-cases)
-8. [Engineering Standards](#engineering-standards)
-9. [Documentation](#documentation)
-10. [License](#license)
+1. [Run it (main.py)](#run-it-mainpy)
+2. [Overview](#overview)
+3. [Theory & Background](#theory--background)
+4. [Architecture](#architecture)
+5. [Project Structure](#project-structure)
+6. [Quick Start](#quick-start)
+7. [API Reference](#api-reference)
+8. [Use Cases](#use-cases)
+9. [Engineering Standards](#engineering-standards)
+10. [Documentation](#documentation)
+11. [License](#license)
 
 ---
 
@@ -206,13 +233,13 @@ The demo simulates a 1 MW / 2 MWh BESS with P-f and Q-V droop over a 60-second g
 ================================================================================
   BESS PCS Droop Simulation — 1 MW / 2 MWh
 ================================================================================
-   t (s)   f (Hz)   V (pu)   P (kW)   Q (kvar)   η (%)  SOC (%)   Trip
+   t (s)   f (Hz)   V (pu)    P (kW)   Q (kvar)   η (%)  SOC (%)   Trip
 --------------------------------------------------------------------------------
-     0.0   60.000    1.000    400.0        0.0   97.75    60.00     OK
-    20.0   60.000    1.000    400.0        0.0   97.75    59.93     OK
-    25.0   59.875    0.990    567.4      240.0   97.93    59.89     OK
-    40.0   59.500    0.960    733.3      480.0   98.03    59.82     OK
-    60.0   60.000    1.000    400.0        0.0   97.75    59.73     OK
+     0.0   60.000    1.000     400.0        0.0   98.23    60.00     OK
+    20.0   60.000    1.000     400.0        0.0   98.23    59.89     OK
+    25.0   59.875    0.990     441.7      120.0   98.32    59.86     OK
+    40.0   59.500    0.960     566.7      480.0   98.51    59.75     OK
+    60.0   60.000    1.000     400.0        0.0   98.23    59.62     OK
 ================================================================================
 ```
 
@@ -225,8 +252,8 @@ from pcs.converter import BidirectionalConverter
 from pcs.control.droop import DroopController
 from pcs.protection import PCSProtection
 
-# 1 MW converter on a 690 V / 800 V DC bus
-conv  = BidirectionalConverter(rated_kw=1000, dc_voltage_V=800, ac_voltage_V=690)
+# 1 MW converter on a 690 V AC / 1150 V DC bus (keeps SPWM modulation index ≤ 1.0)
+conv  = BidirectionalConverter(rated_kw=1000, dc_voltage_V=1150, ac_voltage_V=690)
 droop = DroopController(rated_kw=1000, rated_kvar=600, rated_freq_hz=60)
 prot  = PCSProtection()
 

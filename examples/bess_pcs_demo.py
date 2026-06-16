@@ -46,9 +46,14 @@ from pcs.protection import PCSProtection
 RATED_KW       = 1_000.0     # 1 MW
 RATED_KVAR     = 600.0       # 0.6 MVAr
 RATED_FREQ     = 60.0        # Hz
-DC_VOLTAGE     = 800.0       # V
-AC_VOLTAGE     = 690.0       # V  (MV transformer secondary)
+AC_VOLTAGE     = 690.0       # V  (MV transformer secondary, line-line RMS)
+# DC-bus sizing: for linear SPWM the modulation index m = V_phase_peak / (V_dc/2)
+# must stay ≤ 1.0, where V_phase_peak = V_LL · √(2/3) = 690 · 0.8165 ≈ 563 V.
+# Linear operation therefore requires V_dc ≥ 2·V_phase_peak ≈ 1127 V; a 1150 V
+# bus gives m ≈ 0.98 with margin — a realistic rating for a 690 V-AC BESS PCS.
+DC_VOLTAGE     = 1_150.0     # V
 SW_FREQ        = 10_000.0    # Hz
+DC_OV_TRIP     = 1_300.0     # V  DC over-voltage trip (≈ 1.13·V_dc nominal)
 
 SOC_INITIAL    = 0.60        # 60 % state of charge
 CAPACITY_KWH   = 2_000.0     # 2 MWh
@@ -151,7 +156,7 @@ for k in range(N):
 
     # Protection evaluation
     prot = protection.evaluate_all(
-        v_pu=vk, f_hz=fk, v_dc=DC_VOLTAGE, v_dc_max=880.0,
+        v_pu=vk, f_hz=fk, v_dc=DC_VOLTAGE, v_dc_max=DC_OV_TRIP,
         i_meas=i_ac_A[k], i_max=1_200.0,
     )
     trip_flag[k] = prot["any_trip"]
