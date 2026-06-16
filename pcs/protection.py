@@ -48,7 +48,15 @@ class PCSProtection:
     """
 
     def __init__(self) -> None:
-        pass   # stateless; thresholds passed per-call or overridden in subclass
+        """
+        Initialise PCSProtection with no instance state.
+
+        All trip thresholds are passed as keyword arguments to each method so
+        that a single instance can evaluate multiple protection zones (e.g.
+        different voltage limits for Category I vs. Category III) without
+        re-instantiation.  Subclass and override individual methods to hard-code
+        site-specific thresholds.
+        """
 
     # ------------------------------------------------------------------
     # Voltage protection
